@@ -1,9 +1,9 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <Windows.h>
-#include <winsock.h> // <winsock2.h> 가 아녔나?
-#include<iostream>
-#include<vector>
-#include<sstream>
+#include <windows.h>
+#include <Winsock.h>
+#include <iostream>
+#include <vector>
+#include <sstream>
 #pragma comment (lib, "ws2_32.lib")
 
 using namespace std;
@@ -68,7 +68,7 @@ void playClient(int roomID) {
 			ZeroMemory(sent, 256);
 			if (black) {
 				sprintf(sent, "%s", "[Play]Black");
-				black - false;
+				black = false;
 			}
 			else {
 				sprintf(sent, "%s", "[Play]White");
@@ -129,6 +129,9 @@ void ServerThread(Client* client) {
 						Client* newClient = new Client(*client);
 						newClient->setRoomID(roomInt);
 						connections[i] = *newClient;
+						/* 방에 성공적으로 접속했다고 메시지 전송 */
+						ZeroMemory(sent, 256);
+						sprintf(sent, "%s", "[Enter]");
 						send(connections[i].getClientSocket(), sent, 256, 0);
 						/* 상대방이 이미 방에 들어가 있는 경우 게임 시작 */
 						if (clientCount == 1) {
@@ -163,7 +166,8 @@ void ServerThread(Client* client) {
 			for (int i = 0; i < connections.size(); i++) {
 				if (connections[i].getClientID() == client->getClientID()) {
 					/* 다른 사용자와 게임 중이던 사람이 나간 경우 */
-					if (connections[i].getRoomID() != -1 && clientCountInRoom(connections[i].getRoomID()) == 2) {
+					if (connections[i].getRoomID() != -1 &&
+						clientCountInRoom(connections[i].getRoomID()) == 2) {
 						/* 남아있는 사람에게 메시지 전송 */
 						exitClient(connections[i].getRoomID());
 					}
@@ -177,7 +181,7 @@ void ServerThread(Client* client) {
 	}
 }
 
-int main(void) {
+int main() {
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
 	serverSocket = socket(AF_INET, SOCK_STREAM, NULL);
 
@@ -189,10 +193,10 @@ int main(void) {
 	bind(serverSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress));
 	listen(serverSocket, 32);
 
-	int addressLenth = sizeof(serverAddress);
+	int addressLength = sizeof(serverAddress);
 	while (true) {
 		SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, NULL);
-		if (clientSocket = accept(serverSocket, (SOCKADDR*)&serverAddress, &addressLenth)) {
+		if (clientSocket = accept(serverSocket, (SOCKADDR*)&serverAddress, &addressLength)) {
 			Client* client = new Client(nextID, clientSocket);
 			cout << "[ 새로운 사용자 접속 ]" << endl;
 			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ServerThread, (LPVOID)client, NULL, NULL);
